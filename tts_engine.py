@@ -1,4 +1,4 @@
-
+import uuid
 from google.cloud import texttospeech
 
 def generate_tts_file(text, user_id, setting):
@@ -15,7 +15,8 @@ def generate_tts_file(text, user_id, setting):
     })
 
     response = client.synthesize_speech(request=request)
-    filename = f"tts_temp_{user_id}.mp3"
+    voice_id = uuid.uuid4().hex[:8]
+    filename = f"tts_temp_{user_id}_{voice_id}.mp3"
 
     with open(filename, "wb") as out:
         out.write(response.audio_content)

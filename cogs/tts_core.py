@@ -16,6 +16,15 @@ class TTSCore(commands.Cog):
         self.tts_queues = {}
         self.is_processing = {}
 
+    async def prepare_tts(self, text, user_id):
+        # 메시지 처리
+        processed_content = await replace_text(text)
+        # DB 모듈에서 설정 가져오기
+        setting = await db.get_user_settings(user_id)
+        # TTS 엔진 모듈에서 파일 만들기
+        filename = await asyncio.to_thread(generate_tts_file, processed_content, user_id, setting)
+        return filename
+
     async def process_and_play(self, guild):
         # 이미 다른 채팅을 읽고 처리하는 중이라면 돌아감.
         if self.is_processing.get(guild.id, False): return
@@ -30,16 +39,11 @@ class TTSCore(commands.Cog):
             # 이 채팅을 다 읽기 전까지 다른 채팅 대기
             self.is_processing[guild.id] = True
 
-            # 대기열 맨 앞에서 하나를 꺼냄 (pop)
-            text, user_id = self.tts_queues[guild.id].pop(0)
+            # 백그라운드에서 돌아가는 작업을 순서대로 꺼냄
+            gen_task = self.tts_queues[guild.id].pop(0)
 
             try:
-                # 메시지 처리
-                processed_content = await replace_text(text)
-                # DB 모듈에서 설정 가져오기
-                setting = await db.get_user_settings(user_id)
-                # TTS 엔진 모듈에서 파일 만들기
-                filename = await asyncio.to_thread(generate_tts_file, processed_content, user_id, setting)
+                filename = await gen_task
 
                 def after_play(error):
                     if os.path.exists(filename):
@@ -52,7 +56,7 @@ class TTSCore(commands.Cog):
 
             except Exception as e:
                 print(f"TTS 에러: {e}")
-                # 에러가 나더라도 다른 채팅을 처리할 수 있도록 플래그 해제
+                # 에러가 나더라도 다른 채팅을 읽을 수 있도록 플래그 해제
                 self.is_processing[guild.id] = False
                 self.bot.loop.create_task(self.process_and_play(guild))
         else:
@@ -100,8 +104,7 @@ class TTSCore(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         # 봇이 친 채팅은 무시
-        if message.author.bot:
-            return
+        if message.author.bot: return
 
         # 이 서버에 TTS 봇이 켜져 있는지 확인
         if message.guild.id in self.auto_tts_channels and message.channel.id == self.auto_tts_channels[message.guild.id]:
@@ -111,24 +114,24 @@ class TTSCore(commands.Cog):
                 # 첨부파일 중 '이미지'가 몇 개인지 확인
                 photo_count = sum(1 for a in message.attachments if a.content_type.startswith("image/"))
                 if photo_count == 1:
-                    attachment_text += " 사진을 보냈어요."
+                    attachment_text += "사진을 보냈어요. "
                 elif photo_count > 1:
-                    attachment_text += " 여러 장의 사진을 보냈어요."
+                    attachment_text += "여러 장의 사진을 보냈어요. "
             if message.stickers:
-                attachment_text += " 스티커를 보냈어요."
+                attachment_text += "스티커를 보냈어요. "
 
-            raw_text = message.content + attachment_text
+            raw_text = attachment_text + message.content
 
             # 내용이 없는 채팅 무시하기
-            if not raw_text.strip():
-                return
+            if not raw_text.strip(): return
 
             # 대기열에 채팅 추가
             if message.guild.id not in self.tts_queues:
                 self.tts_queues[message.guild.id] = []
 
-            # (텍스트 내용, 작성자 ID) 형태로 줄 세우기
-            self.tts_queues[message.guild.id].append((raw_text.strip(), message.author.id))
+            # 텍스트를 직접 대기열에 넣지 않고, 파일을 생성하는 백그라운드 작업을 즉시 실행 후 작업을 대기열에 넣음.
+            gen_task = asyncio.create_task(self.prepare_tts(raw_text.strip(), message.author.id))
+            self.tts_queues[message.guild.id].append(gen_task)
 
             # tts 음성 처리 함수 호출 (이미 재생 중이면 알아서 무시하고 큐에만 담김)
             await self.process_and_play(message.guild)
