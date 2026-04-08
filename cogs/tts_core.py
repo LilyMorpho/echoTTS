@@ -124,7 +124,7 @@ class TTSCore(commands.Cog):
             if message.reference is not None:
                 reply_prefix = "답장 : "
 
-            raw_text = reply_prefix + attachment_text + message.content
+            raw_text = reply_prefix + attachment_text + message.clean_content
 
             # 내용이 없는 채팅 무시하기
             if not raw_text.strip(): return
