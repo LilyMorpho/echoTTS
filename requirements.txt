@@ -1,0 +1,10 @@
+httpx
+beautifulsoup4
+
+discord.py
+google-cloud-texttospeech
+PyNaCl
+
+aiosqlite
+
+python-dotenv
