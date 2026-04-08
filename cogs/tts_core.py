@@ -120,7 +120,11 @@ class TTSCore(commands.Cog):
             if message.stickers:
                 attachment_text += "스티커를 보냈어요. "
 
-            raw_text = attachment_text + message.content
+            reply_prefix = ""
+            if message.reference is not None:
+                reply_prefix = "답장 : "
+
+            raw_text = reply_prefix + attachment_text + message.content
 
             # 내용이 없는 채팅 무시하기
             if not raw_text.strip(): return
