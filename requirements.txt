@@ -1,10 +1,14 @@
 httpx
 beautifulsoup4
 
-discord.py
-google-cloud-texttospeech
+discord.py[voice]
+dave.py
 PyNaCl
+
+google-cloud-texttospeech
 
 aiosqlite
 
 python-dotenv
+
+emoji

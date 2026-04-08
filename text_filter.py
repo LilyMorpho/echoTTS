@@ -1,4 +1,5 @@
 import re
+import emoji
 
 import httpx
 from bs4 import BeautifulSoup
@@ -49,9 +50,13 @@ async def get_link_title(url):
 
 async def replace_text(text):
     # 스포일러 태그 안의 텍스트 무시
-    text = re.sub(r'\|\|.*?\|\|', '', text)
-    # 디스코드 커스텀 이모지 처리(연속된 이모티콘 묶어서 처리)
-    text = re.sub(r'(?:<a?:\w+:\d+>\s*)+', ' 이모티콘 ', text)
+    text = re.sub(r'\|\|.*?\|\|', "", text)
+    # 디스코드 커스텀 이모지 임시 태그로 변경
+    text = re.sub(r'<a?:\w+:\d+>', "[EMOJI]", text)
+    # 기본 유니코드 이모티콘 임시 태그로 변경
+    text = emoji.replace_emoji(text, replace="[EMOJI]")
+    # 연속된 임시 태그(중간에 공백이 있어도 포함)을 하나로 묶어서 "이모티콘"으로 치환
+    text = re.sub(r'(?:\[EMOJI\]\s*)+', ' 이모티콘 ', text)
     # 링크 감지
     urls = re.findall(r'https?://\S+', text)
     if urls:
