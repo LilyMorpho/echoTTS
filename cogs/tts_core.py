@@ -3,10 +3,9 @@ from discord import app_commands
 from discord.ext import commands
 
 import asyncio
-import os
 
 import db
-from tts_engine import generate_tts_file
+from tts_engine import generate_tts_voice
 from text_filter import replace_text
 
 class TTSCore(commands.Cog):
@@ -21,9 +20,9 @@ class TTSCore(commands.Cog):
         processed_content = await replace_text(text)
         # DB 모듈에서 설정 가져오기
         setting = await db.get_user_settings(user_id)
-        # TTS 엔진 모듈에서 파일 만들기
-        filename = await asyncio.to_thread(generate_tts_file, processed_content, user_id, setting)
-        return filename
+        # TTS 엔진 모듈에서 메모리 버퍼를 받아오기
+        voice_buffer = await asyncio.to_thread(generate_tts_voice, processed_content, setting)
+        return voice_buffer
 
     async def process_and_play(self, guild):
         # 이미 다른 채팅을 읽고 처리하는 중이라면 돌아감.
@@ -43,16 +42,13 @@ class TTSCore(commands.Cog):
             gen_task = self.tts_queues[guild.id].pop(0)
 
             try:
-                filename = await gen_task
+                voice_buffer = await gen_task
 
                 def after_play(error):
-                    if os.path.exists(filename):
-                        try: os.remove(filename)
-                        except: pass
                     self.is_processing[guild.id] = False
                     self.bot.loop.create_task(self.process_and_play(guild))
 
-                vc.play(discord.FFmpegPCMAudio(filename), after=after_play)
+                vc.play(discord.FFmpegPCMAudio(voice_buffer.read(), pipe=True), after=after_play)
 
             except Exception as e:
                 print(f"TTS 에러: {e}")
