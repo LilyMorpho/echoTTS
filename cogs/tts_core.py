@@ -3,6 +3,8 @@ from discord import app_commands
 from discord.ext import commands
 
 import asyncio
+import os
+import uuid
 
 import db
 from tts_engine import generate_tts_voice
@@ -43,18 +45,28 @@ class TTSCore(commands.Cog):
 
             try:
                 voice_buffer = await gen_task
+                # 임시 파일 저장(uuid를 사용, 겹칠 확률이 없는 고유 파일 생성)
+                unique_id = uuid.uuid4()
+                file_path = f"tts_temp_{guild.id}_{unique_id}.mp3"
+
+                with open(file_path, "wb") as f:
+                    f.write(voice_buffer.read())
 
                 def after_play(error):
                     self.is_processing[guild.id] = False
-                    self.bot.loop.create_task(self.process_and_play(guild))
+                    # 재생이 끝난 후, 해당 임시 파일만 깔끔하게 삭제
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                    # 백그라운드 스레드에서 메인 루프로 안전하게 다음 큐 지시
+                    asyncio.run_coroutine_threadsafe(self.process_and_play(guild), self.bot.loop)
 
-                vc.play(discord.FFmpegPCMAudio(voice_buffer.read(), pipe=True), after=after_play)
+                vc.play(discord.FFmpegPCMAudio(file_path), after=after_play)
 
             except Exception as e:
                 print(f"TTS 에러: {e}")
-                # 에러가 나더라도 다른 채팅을 읽을 수 있도록 플래그 해제
                 self.is_processing[guild.id] = False
-                self.bot.loop.create_task(self.process_and_play(guild))
+                # 에러가 나더라도 다른 채팅을 읽을 수 있도록 조치
+                asyncio.run_coroutine_threadsafe(self.process_and_play(guild), self.bot.loop)
         else:
             self.is_processing[guild.id] = False
 
