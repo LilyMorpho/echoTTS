@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 import db
 
 load_dotenv()
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "discord-tts-3332-0360807b8714.json"
 
 class TTSBot(commands.Bot):
     def __init__(self):
