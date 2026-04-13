@@ -2,7 +2,6 @@ httpx
 beautifulsoup4
 
 discord.py[voice]
-dave.py
 PyNaCl
 
 google-cloud-texttospeech
