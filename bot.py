@@ -4,10 +4,10 @@ from discord.ext import commands
 import os
 
 from dotenv import load_dotenv
+load_dotenv()
 
 import db
 
-load_dotenv()
 
 class TTSBot(commands.Bot):
     def __init__(self):

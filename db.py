@@ -3,7 +3,7 @@ import aiosqlite
 DB_FILE = "tts_settings_beta.db"
 
 async def setup_db():
-    async with aiosqlite.connect("tts_settings.db") as db:
+    async with aiosqlite.connect(DB_FILE) as db:
         await db.execute('''
             CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER PRIMARY KEY,
