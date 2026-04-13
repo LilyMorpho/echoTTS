@@ -47,7 +47,7 @@ class TTSCore(commands.Cog):
                 voice_buffer = await gen_task
                 # 임시 파일 저장(uuid를 사용, 겹칠 확률이 없는 고유 파일 생성)
                 unique_id = uuid.uuid4()
-                file_path = f"tts_temp_{guild.id}_{unique_id}.mp3"
+                file_path = f"/dev/shm/tts_temp_{guild.id}_{unique_id}.mp3"
 
                 with open(file_path, "wb") as f:
                     f.write(voice_buffer.read())
