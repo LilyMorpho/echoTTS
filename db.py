@@ -1,6 +1,6 @@
 import aiosqlite
 
-DB_FILE = "tts_settings.db"
+DB_FILE = "tts_settings_beta.db"
 
 async def setup_db():
     async with aiosqlite.connect("tts_settings.db") as db:

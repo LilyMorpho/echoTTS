@@ -31,5 +31,5 @@ async def on_ready():
     print(f'로그인 및 슬래시 커맨드 준비 완료: {bot.user.name}')
 
 # 봇 토큰 입력
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+DISCORD_TOKEN = os.getenv("DISCORD_BETA_TOKEN")
 bot.run(DISCORD_TOKEN)
