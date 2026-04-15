@@ -30,14 +30,14 @@ def show_settings_embed(user: discord.User, voice: str, pitch: float, rate: floa
 
 class DetailSettingsModal(ui.Modal, title="음높이 및 속도 조절"):
     pitch_input = ui.TextInput(label="음높이 (-20.0 ~ 20.0)", style=discord.TextStyle.short, placeholder="기본값: 0.0")
-    rate_input = ui.TextInput(label="말하는 속도 (0.25 ~ 4.0)", style=discord.TextStyle.short, placeholder="기본값: 1.0")
+    rate_input = ui.TextInput(label="말하는 속도 (0.25 ~ 2.0)", style=discord.TextStyle.short, placeholder="기본값: 1.0")
 
     def __init__(self, parent_view: ui.View):
         super().__init__()
         # 현재 설정 값 저장(DB 저장 시 사용)
         self.parent_view = parent_view
-        self.current_voice = parent_view.current_voice
-        self.is_chirp3 = "Chirp3" in current_voice
+        self.current_voice = parent_view.voice
+        self.is_chirp3 = "Chirp3" in self.current_voice
         # Chirp3 모델일 경우 음높이 입력 칸을 삭제
         if self.is_chirp3:
             self.remove_item(self.pitch_input)
@@ -60,7 +60,7 @@ class DetailSettingsModal(ui.Modal, title="음높이 및 속도 조절"):
             self.parent_view.rate = new_rate
             self.parent_view.update_components()
 
-            await interaction.response.edit_message(embed=embed, view=view)
+            await interaction.response.edit_message(embed=embed, view=self.parent_view)
         except ValueError: # 숫자가 아닌 형식으로 입력되었을 때 에러 처리
             await interaction.response.send_message("❌ 숫자를 정확히 입력해 주세요!", ephemeral=True)
 
