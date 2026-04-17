@@ -5,7 +5,7 @@ import httpx
 from bs4 import BeautifulSoup
 
 replace_dict = {
-    "ㅇㄱㅈㅉㅇㅇ?": "이거진짜예요?",
+    "ㅇㄱㅈㅉㅇㅇ": "이거진짜예요",
     "ㄱㅇㄱ": "개웃겨",
     "ㄱㄴㄲ": "그니까",
     "ㅎㅇㅌ": "화이팅",
