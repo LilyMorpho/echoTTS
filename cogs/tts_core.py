@@ -83,7 +83,7 @@ class TTSCore(commands.Cog):
 
         # 음성 채널 접속
         if not vc:
-            await voice_channel.connect(self_deaf=True)
+            await voice_channel.connect(self_deaf=True, timeout=120.0, reconnect=True)
         else:
             await vc.move_to(voice_channel)
 
