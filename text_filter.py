@@ -71,7 +71,7 @@ async def get_link_title(url):
 
 async def replace_text(text):
     # 스포일러 태그 안의 텍스트 무시
-    text = re.sub(r'\|\|.*?\|\|', "", text)
+    text = re.sub(r'\|\|[\s\S]*?\|\|', '', text)
     # 디스코드 커스텀 이모지 임시 태그로 변경
     text = re.sub(r'<a?:\w+:\d+>', "[EMOJI]", text)
     # 기본 유니코드 이모티콘 임시 태그로 변경
