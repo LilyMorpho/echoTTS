@@ -141,7 +141,7 @@ class TTSCore(commands.Cog):
 
                     # 전달된 원본 메시지 내용을 봇이 읽을 수 있도록 스냅샷에서 꺼내오기
                     if hasattr(message, "message_snapshots") and message.message_snapshots:
-                        original_message = message.message_snapshots[0].message.clean_content
+                        original_message = message.message_snapshots[0].clean_content
 
                         raw_text = attachment_text + forward_text + "\n전달된 메시지 : " + original_message
             else:
