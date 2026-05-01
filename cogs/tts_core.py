@@ -143,7 +143,9 @@ class TTSCore(commands.Cog):
                     if hasattr(message, "message_snapshots") and message.message_snapshots:
                         original_message = message.message_snapshots[0].message.clean_content
 
-                        raw_text = forward_text + "\n전달된 메시지 : " + original_message
+                        raw_text = attachment_text + forward_text + "\n전달된 메시지 : " + original_message
+            else:
+                raw_text = attachment_text + message.clean_content
 
             # 내용이 없는 채팅 무시하기
             if not raw_text.strip(): return
