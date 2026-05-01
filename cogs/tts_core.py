@@ -137,13 +137,11 @@ class TTSCore(commands.Cog):
                 if message.type == discord.MessageType.reply:
                     raw_text = "답장 : " + attachment_text + message.clean_content
                 else:
-                    forward_text = message.clean_content.strip() # 전달할 때 유저가 추가로 적은 코멘트
-
                     # 전달된 원본 메시지 내용을 봇이 읽을 수 있도록 스냅샷에서 꺼내오기
                     if hasattr(message, "message_snapshots") and message.message_snapshots:
                         original_message = message.message_snapshots[0].content
 
-                        raw_text = attachment_text + forward_text + "\n전달된 메시지 : " + original_message
+                        raw_text = attachment_text + "\n전달된 메시지 : " + original_message
             else:
                 raw_text = attachment_text + message.clean_content
 
