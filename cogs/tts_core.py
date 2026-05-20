@@ -1,6 +1,6 @@
 import discord
 from discord import app_commands
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 import asyncio
 import os
@@ -16,6 +16,21 @@ class TTSCore(commands.Cog):
         self.auto_tts_channels = {}
         self.tts_queues = {}
         self.is_processing = {}
+
+    async def cog_load(self):
+        self.keep_alive_tts.start()
+
+    async def cog_unload(self):
+        self.keep_alive_tts.cancel()
+
+    @tasks.loop(minutes=5)
+    async def keep_alive_tts(self):
+        try:
+            # "아" 한 글자만 요청하고 결과(버퍼)는 버립니다.
+            dummy_setting = {"voice": "ko-KR-Wavenet-A", "pitch": 0.0, "rate": 1.0}
+            await asyncio.to_thread(generate_tts_voice, "아", dummy_setting)
+        except Exception:
+            pass
 
     async def prepare_tts(self, text, user_id):
         # 메시지 처리
@@ -86,6 +101,13 @@ class TTSCore(commands.Cog):
             await voice_channel.connect(self_deaf=True, timeout=120.0, reconnect=True)
         else:
             await vc.move_to(voice_channel)
+
+        if vc and vc.is_connected() and not vc.is_playing():
+            try:
+                warmup_audio = discord.FFmpegPCMAudio(source='anullsrc=r48000:cl=mono', before_options='-f lavfi -t 0.1')
+                vc.play(warmup_audio)
+            except Exception as e:
+                print(f"워밍업 음성 재생 실패: {e}")
 
         # 현재 슬래시 커맨드를 친 '텍스트 채널'을 주시 대상으로 등록
         self.auto_tts_channels[interaction.guild.id] = interaction.channel_id
