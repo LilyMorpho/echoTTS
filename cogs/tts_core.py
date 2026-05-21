@@ -51,6 +51,14 @@ class TTSCore(commands.Cog):
             self.is_processing[guild.id] = False
             return
 
+        # is_processing이 False일 때에 어떠한 이유로 인해 디스코드에서 소리를 재생 중일 때 회피
+        if vc.is_playing():
+            asyncio.get_event_loop().call_later(
+                0.5,
+                lambda: asyncio.run_coroutine_threadsafe(self.process_and_play(guild), self.bot.loop)
+            )
+            return
+
         if guild.id in self.tts_queues and len(self.tts_queues[guild.id]) > 0:
             # 이 채팅을 다 읽기 전까지 다른 채팅 대기
             self.is_processing[guild.id] = True
@@ -102,11 +110,19 @@ class TTSCore(commands.Cog):
         else:
             await vc.move_to(voice_channel)
 
+        # 일정 주기마다 무음 음성 재생으로 UDP 소켓 열어두기
         if vc and vc.is_connected() and not vc.is_playing():
             try:
-                warmup_audio = discord.FFmpegPCMAudio(source='anullsrc=r48000:cl=mono', before_options='-f lavfi -t 0.1')
-                vc.play(warmup_audio)
+                warmup_audio = discord.FFmpegPCMAudio(source='anullsrc=r=48000:cl=mono', before_options='-f lavfi -t 0.1')
+                self.is_processing[interaction.guild.id] = True
+
+                def after_warmup(error):
+                    self.is_processing[interaction.guild.id] = False
+                    asyncio.run_coroutine_threadsafe(self.process_and_play(interaction.guild), self.bot.loop)
+
+                vc.play(warmup_audio, after=after_warmup)
             except Exception as e:
+                self.is_processing[interaction.guild.id] = False
                 print(f"워밍업 음성 재생 실패: {e}")
 
         # 현재 슬래시 커맨드를 친 '텍스트 채널'을 주시 대상으로 등록
