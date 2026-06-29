@@ -101,6 +101,13 @@ class TTSCore(commands.Cog):
             await interaction.response.send_message("먼저 음성 채널에 들어가서 명령어를 써주세요!", ephemeral=True)
             return
 
+        user_voice_channel = interaction.user.voice.channel
+        command_channel = interaction.channel
+
+        if command_channel.type == discord.ChannelType.voice:
+            if user_voice_channel.id != command_channel.id:
+                await interaction.response.send_message("❌ 현재 접속 중인 음성 채널의 채팅방에서만 봇을 부를 수 있어요!", ephemeral=True)
+
         vc = interaction.guild.voice_client
         voice_channel = interaction.user.voice.channel
 
