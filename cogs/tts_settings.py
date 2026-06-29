@@ -10,7 +10,7 @@ from tts_engine import generate_tts_voice
 
 # =============== UI 화면 생성 ===============
 
-def show_settings_embed(user: discord.User, voice: str, pitch: float, rate: float): # 현재 설정을 보여주는 임베드 생성
+def show_settings_embed(user: discord.User, voice: str, pitch: float, rate: float, is_nya: bool = False): # 현재 설정을 보여주는 임베드 생성
     embed = discord.Embed(
         title=f"{user.display_name}의 목소리 설정",
         description="현재 적용된 목소리 정보입니다. 아래 메뉴를 통해 수정할 수 있습니다.",
@@ -54,10 +54,10 @@ class DetailSettingsModal(ui.Modal, title="음높이 및 속도 조절"):
             new_pitch = 0.0 if self.is_chirp3 else max(-20.0, min(20.0, float(self.pitch_input.value)))
             new_rate = max(0.25, min(2.0, float(self.rate_input.value)))
             # DB에 변경된 값 저장
-            await db.save_user_setting(interaction.user.id, self.current_voice, new_pitch, new_rate)
+            await db.save_user_setting(interaction.user.id, self.current_voice, new_pitch, new_rate, self.parent_view.is_nya)
 
             # 화면을 변경된 설정 값으로 새로고침
-            embed = show_settings_embed(interaction.user, self.current_voice, new_pitch, new_rate)
+            embed = show_settings_embed(interaction.user, self.current_voice, new_pitch, new_rate, self.parent_view.is_nya)
             # 새로운 뷰를 만들지 않고 기존 뷰의 값만 갱신(미리듣기 메시지 기억 유지)
             self.parent_view.pitch = new_pitch
             self.parent_view.rate = new_rate
