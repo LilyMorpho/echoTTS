@@ -10,8 +10,8 @@ async def setup_db():
                 voice TEXT,
                 pitch REAL,
                 rate REAL,
-                is_nya INTEGER DEFAULT 0,
-            )
+                is_nya INTEGER DEFAULT 0
+            );
         ''')
         await db.commit()
 
@@ -30,5 +30,5 @@ async def save_user_setting(user_id, voice, pitch, rate, is_nya):
         await db.execute('''
                 INSERT OR REPLACE INTO users (user_id, voice, pitch, rate, is_nya)
                 VALUES (?, ?, ?, ?, ?)
-                ''', (user_id, voice, pitch, rate, nya_val))
+                ''', (user_id, voice, pitch, rate, nya_val,))
         await db.commit()
