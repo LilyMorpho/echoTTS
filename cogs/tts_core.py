@@ -41,7 +41,7 @@ class TTSCore(commands.Cog):
         if setting.get("is_nya", False):
             from text_filter import apply_nyaize
             processed_content = apply_nyaize(processed_content)
-            print(f"고양이 모드 변환 결과: {processed_content}")
+            print(f"고양이 모드 변환 결과: {processed_content}", flush=True)
         # TTS 엔진 모듈에서 메모리 버퍼를 받아오기
         voice_buffer = await asyncio.to_thread(generate_tts_voice, processed_content, setting)
         return voice_buffer
