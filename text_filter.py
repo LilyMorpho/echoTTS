@@ -111,7 +111,7 @@ async def replace_text(text):
 
 def apply_nyaize(text: str) -> str:
     kr_pattern = re.compile(r'[나-낳]')
-    text = kr_pattern.sub(lambda x: chr(ord(x.group()) + 28), text)
+    text = kr_pattern.sub(lambda x: chr(ord(x.group()) + 56), text)
 
     kr_da_pattern = re.compile(r'다(?=[\s\.\?\!]$)')
     text = kr_da_pattern.sub('다냥', text)
