@@ -23,6 +23,9 @@ def show_settings_embed(user: discord.User, voice: str, pitch: float, rate: floa
     else:
         embed.add_field(name="🎼 음높이 (Pitch)", value=f"`{pitch}`", inline=True)
     embed.add_field(name="⏩ 속도 (Rate)", value=f"`{rate}x`", inline=True)
+
+    nya_status = "✅ 켜짐 (냥체 적용)" if is_nya else "❌ 꺼짐"
+    embed.add_field(name="🐾 고양이 모드", value=f"`{nya_status}`", inline=False)
     embed.set_thumbnail(url=user.display_avatar.url) # 우측 상단에 유저 프로필 사진 표시
     return embed
 
@@ -135,11 +138,12 @@ class VoiceSelect(ui.Select):
         await self.view.update_and_respond(interaction)
 
 class VoiceSettingsView(ui.View): # 드롭다운 메뉴와 버튼을 하나의 덩어리로 묶어주는 역할
-    def __init__(self, voice: str, pitch: float, rate: float):
+    def __init__(self, voice: str, pitch: float, rate: float, is_nya: bool = False):
         super().__init__(timeout=None) # 시간 제한 없이 버튼을 누를 수 있도록
         self.voice = voice
         self.pitch = pitch
         self.rate = rate
+        self.is_nya = is_nya
         self.model_selected = False
         self.last_preview_message = None
 
@@ -157,9 +161,9 @@ class VoiceSettingsView(ui.View): # 드롭다운 메뉴와 버튼을 하나의 �
         self.update_components()
 
     async def update_and_respond(self, interaction: discord.Interaction): # DB 저장 및 화면 새로고침을 담당하는 함수
-        await db.save_user_setting(interaction.user.id, self.voice, self.pitch, self.rate)
+        await db.save_user_setting(interaction.user.id, self.voice, self.pitch, self.rate, self.is_nya)
         self.update_components()
-        embed = show_settings_embed(interaction.user, self.voice, self.pitch, self.rate)
+        embed = show_settings_embed(interaction.user, self.voice, self.pitch, self.rate, self.is_nya)
         await interaction.response.edit_message(embed=embed, view=self)
 
     def update_components(self):
@@ -188,11 +192,21 @@ class VoiceSettingsView(ui.View): # 드롭다운 메뉴와 버튼을 하나의 �
         preview_btn = ui.Button(label="미리듣기", style=discord.ButtonStyle.primary, emoji="▶️", row=button_row, custom_id="preview")
         preview_btn.callback = self.preview_callback
         self.add_item(preview_btn)
+        # 냥체 토글 버튼
+        nya_style = discord.ButtonStyle.success if self.is_nya else discord.ButtonStyle.secondary
+        nya_label = "🐱 고양이 모드: ON" if self.is_nya else "🐱 고양이 모드: OFF"
+        nya_btn = ui.Button(label=nya_label, style=nya_style, emoji="🐾", row=button_row, custom_id="nya_toggle")
+        nya_btn.callback = self.nya_toggle_callback
+        self.add_item(nya_btn)
 
     async def edit_details_callback(self, interaction: discord.Interaction):
         # 세부 설정 동작 로직
         modal = DetailSettingsModal(self)
         await interaction.response.send_modal(modal)
+
+    async def nya_toggle_callback(self, interaction: discord.Interaction):
+        self.is_nya = not self.is_nya
+        await self.update_and_respond(interaction)
 
     async def preview_callback(self, interaction: discord.Interaction):
         # 오디오 생성에 시간이 걸릴 수 있으므로 defer 처리
@@ -204,7 +218,7 @@ class VoiceSettingsView(ui.View): # 드롭다운 메뉴와 버튼을 하나의 �
             except discord.NotFound: pass
 
         preview_text = "설정된 에코봇의 목소리를 미리 들어보세요."
-        setting = {"voice": self.voice, "pitch": self.pitch, "rate": self.rate}
+        setting = {"voice": self.voice, "pitch": self.pitch, "rate": self.rate, "is_nya": self.is_nya}
 
         try: # TTS 요청 비동기로 실행
             buffer = await asyncio.to_thread(generate_tts_voice, preview_text, setting)
@@ -232,11 +246,12 @@ class TTSSettings(commands.Cog):
             voice = setting.get("voice", setting.get("voice_name", setting.get("voice_type", "ko-KR-Wavenet-A")))
             pitch = float(setting.get("pitch", 0.0))
             rate = float(setting.get("rate", setting.get("speaking_rate", 1.0)))
+            is_nya = setting.get("is_nya", False)
         else:
-            voice, pitch, rate = ("ko-KR-Wavenet-A", 0.0, 1.0)
+            voice, pitch, rate, is_nya = ("ko-KR-Wavenet-A", 0.0, 1.0, False)
         # 가져온 설정값으로 화면과 메뉴 표시
-        view = VoiceSettingsView(voice, pitch, rate)
-        embed = show_settings_embed(interaction.user, voice, pitch, rate)
+        view = VoiceSettingsView(voice, pitch, rate, is_nya)
+        embed = show_settings_embed(interaction.user, voice, pitch, rate, is_nya)
 
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 

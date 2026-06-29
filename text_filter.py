@@ -108,3 +108,32 @@ async def replace_text(text):
         text = "너무 긴 글은 읽을 수 없어요."
 
     return text
+
+def apply_nyaize(text: str) -> str:
+    kr_pattern = re.compile(r'[나-낳]')
+    text = kr_pattern.sub(lambda x: chr(ord(x.group()) + 28), text)
+
+    kr_da_pattern = re.compile(r'다(?=[\s\.\?\!]$)')
+    text = kr_da_pattern.sub('다냥', text)
+
+    kr_ya_pattern = re.compile(r'야(?=[\s\?]$)')
+    text = kr_ya_pattern.sub('냥', text)
+
+    ja_dict = {'な': 'にゃ', 'ナ': 'ニャ', 'ﾅ': 'ﾆｬ'}
+
+    ja_pattern = re.compile('|'.join(re.escape(key) for key in ja_dict.keys()))
+    text = ja_pattern.sub(lambda x: ja_dict[x.group()], text)
+
+    en_na_pattern = re.compile(r'(?<=n)a')
+    text = en_na_pattern.sub('ya', text)
+
+    en_morning_pattern = re.compile(r'(?<=morn)ing')
+    text = en_morning_pattern.sub('yan', text)
+
+    en_everyone_pattern = re.compile(r'(?<=every)one')
+    text = en_everyone_pattern.sub('nyan', text)
+
+    return text
+
+
+
