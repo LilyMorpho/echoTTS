@@ -106,7 +106,7 @@ class Minigame(commands.Cog):
         match = re.match(r"^(\d+)d(\d+)$", expression)
 
         if not match:
-            await interaction.response.send_message("❌ 올바른 형식이 아닙니다! `숫자d숫자` 형식으로 입력해 주세요. (예: 2d6, 1d100)", ephemeral=True)\
+            await interaction.response.send_message("❌ 올바른 형식이 아닙니다! `숫자d숫자` 형식으로 입력해 주세요. (예: 2d6, 1d100)", ephemeral=True)
             return
 
         n = int(match.group(1))
