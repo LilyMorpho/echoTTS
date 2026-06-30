@@ -21,7 +21,7 @@ class Minigame(commands.Cog):
         self.forbidden_word_games[interaction.guild.id] = {
             "word": word,
             "end_time": end_time,
-            "losers": {}
+            "losers": {},
             "channel_id": interaction.channel.id
         }
 
