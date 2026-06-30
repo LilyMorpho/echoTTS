@@ -1,3 +1,6 @@
+import re
+import random
+
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -95,6 +98,44 @@ class Minigame(commands.Cog):
                     await message.add_reaction("❌")
                 except discord.Forbidden:
                     pass
+
+    @app_commands.command(name="주사위", description="m면체 주사위를 n개 굴립니다. (예: 2d6)")
+    @app_commands.describe(expression="주사위 형식 (예: '2d6'을 입력받으면 6면체 주사위 2개를 굴립니다.")
+    async def roll_dice(self, interaction: discord.Interaction, expression: str):
+        expression = expression.lower().strip()
+        match = re.match(r"^(\d+)d(\d+)$", expression)
+
+        if not match:
+            await interaction.response.send_message("❌ 올바른 형식이 아닙니다! `숫자d숫자` 형식으로 입력해 주세요. (예: 2d6, 1d100)", ephemeral=True)\
+            return
+
+        n = int(match.group(1))
+        m = int(match.group(2))
+
+        if n < 1 or n > 100:
+            await interaction.response.send_message("❌ 주사위 개수는 1개에서 100개 사이로 입력해 주세요.", ephemeral=True)
+            return
+
+        if m < 2 or m > 1000:
+            await interaction.response.send_message("❌ 주사위 면수는 2에서 1000 사이로 입력해 주세요.", ephemeral=True)
+            return
+
+        results = [random.randint(1, m) for _ in range(n)]
+        total = sum(results)
+
+        results_str = ", ".join(map(str, results))
+
+        if len(results_str) > 1000:
+            results_str = results_str[:990] + " ... (이하 생략)"
+
+        embed = discord.Embed(
+            title=f"🎲 {expression} 주사위 굴림 결과",
+            description=f"**총합: {total}**\n\n```\n[{results_str} ]\n```",
+            color=discord.Color.green()
+        )
+        embed.set_footer(text=f"{interaction.user.display_name} 님이 굴렸습니다.")
+
+        await interaction.response.send_message(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(Minigame(bot))
