@@ -54,6 +54,11 @@ class Minigame(commands.Cog):
                     result_text = "💥 **[금칙어 게임 결과]** 💥\n\n"
                     for user_id, count in losers_ranking:
                         member = guild.get_member(user_id)
+                        if not member:
+                            try:
+                                member = guild.fetch_member(user_id)
+                            except discord.NotFound:
+                                member = None
                         name = member.display_name if member else "알 수 없는 사용자"
                         result_text += f"**{name}**: {count}회\n"
 
