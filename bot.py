@@ -21,6 +21,7 @@ class TTSBot(commands.Bot):
         # cogs 안의 tts_core 로직과 목소리 설정 UI 불러오기
         await self.load_extension("cogs.tts_core")
         await self.load_extension("cogs.tts_settings")
+        await self.load_extension("cogs.minigame")
         # 슬래시 커맨드 디스코드 서버와 동기화
         await self.tree.sync()
 
