@@ -58,8 +58,10 @@ class Minigame(commands.Cog):
                         name = member.display_name if member else "알 수 없는 사용자"
                         result_text += f"**{name}**: {count}회\n"
 
-                    worst_user = losers_ranking[0][0]
-                    result_text += f"\n **이번 게임의 패배자** <@{worst_user}> 님!\n"
+                    max_count = losers_ranking[0][1]
+                    worst_users = [user_id for user_id, count in losers_ranking if count == max_count]
+                    mentions = ", ".join(f"<@{user_id}>" for user_id in worst_users)
+                    result_text += f"\n **이번 게임의 패배자** {mentions} 님!\n"
 
                 embed = discord.Embed(title="🚫 금칙어 게임 종료!", description=f"금칙어 게임이 종료되었습니다!(금칙어 :**{game_data['word']}**)\n\n{result_text}", color=discord.Color.gold())
                 await channel.send(embed=embed)
