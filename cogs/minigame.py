@@ -27,10 +27,9 @@ class Minigame(commands.Cog):
 
         embed = discord.Embed(
             title="🚫 금칙어 게임 시작!",
-            description=f"지금부터 **{duration}분** 동안 아래 지정된 단어를 말하면 안 됩니다!\n누가 가장 많이 실패할까요?",
+            description=f"지금부터 **{duration}분** 동안 지정된 단어를 말하면 안 됩니다!\n누가 가장 많이 실패할까요?",
             color=discord.Color.red()
         )
-        embed.add_field(name="금칙어(클릭해서 확인)", value=f"||{word}||", inline=False)
         embed.set_footer(text="금칙어를 말하면 봇이 이모지로 해당 메시지에 반응합니다!")
 
         await interaction.response.send_message(embed=embed)
@@ -49,7 +48,7 @@ class Minigame(commands.Cog):
             if channel:
                 losers = game_data["losers"]
                 if not losers:
-                    result_text = "🎉 아무도 금칙어를 말하지 않았습니다! 모두의 훌륭한 승리입니다!"
+                    result_text = "🎉 아무도 금칙어를 말하지 않았습니다! 모두의 훌륭한 눈치 게임 승리!"
                 else:
                     losers_ranking = sorted(losers.items(), key=lambda user: user[1], reverse=True)
                     result_text = "💥 **[금칙어 게임 결과]** 💥\n\n"
