@@ -43,7 +43,7 @@ class TTSBot(commands.Bot):
 
                 await vc.disconnect(force=True)
                 print(f"✅ [{voice_channel.guild.name}] 음성 채널 및 내부 채팅방 퇴장 완료")
-                except discord.Forbidden:
+            except discord.Forbidden:
                 print(f"⚠️ 해당 채널에 메시지를 보낼 권한이 없습니다.")
             except Exception as e:
                 print(f"⚠️ 메시지 전송 중 에러: {e}")
