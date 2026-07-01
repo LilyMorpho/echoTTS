@@ -47,7 +47,6 @@ class TTSBot(commands.Bot):
             voice_channel = vc.channel
             try:
                 await voice_channel.send(f"👋 **{self.user.name}**이(가) 업데이트를 위해 잠시 채팅방을 떠날거예요. 금방 돌아올게요!")
-
                 await vc.disconnect(force=True)
                 print(f"✅ [{voice_channel.guild.name}] 음성 채널 및 내부 채팅방 퇴장 완료")
             except discord.Forbidden:
@@ -56,8 +55,6 @@ class TTSBot(commands.Bot):
                 print(f"⚠️ 메시지 전송 중 에러: {e}")
 
         print("에코봇을 완전히 종료합니다.")
-        await asyncio.sleep(3)
-
         await self.close()
 
 bot = TTSBot()
@@ -68,4 +65,15 @@ async def on_ready():
 
 # 봇 토큰 입력
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-bot.run(DISCORD_TOKEN)
+
+async def main():
+    async with bot:
+        await bot.start(DISCORD_TOKEN)
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        pass
+    except Exception as e:
+        print(f"봇 실행 중 오류: {e}")
