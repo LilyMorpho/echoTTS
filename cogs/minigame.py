@@ -90,7 +90,9 @@ class Minigame(commands.Cog):
             game_data = self.forbidden_word_games[guild_id]
             word = game_data["word"]
 
-            if word in message.content:
+            clean_content = re.sub(r'[*_~|`\u200b\u200c\u200d\ufeff]', '', message.content)
+
+            if word in clean_content:
                 user_id = message.author.id
                 game_data["losers"][user_id] = game_data["losers"].get(user_id, 0) + 1
 
