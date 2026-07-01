@@ -4,6 +4,10 @@ import emoji
 import httpx
 from bs4 import BeautifulSoup
 
+import unicodedata
+import html
+
+
 replace_dict = {
     "ㅇㄱㅈㅉㅇㅇ": "이거진짜예요",
     "ㄴㅁㅁㅅㅇ": "너무무서워",
@@ -79,8 +83,24 @@ async def get_link_title(url):
     return ""
 
 async def replace_text(text):
+    # 글자수 제한을 텍스트 처리 이전에 넣기
+    if len(text) > MAX_LENGTH:
+        text = "너무 긴 글은 읽을 수 없어요."
+
     # 스포일러 태그 안의 텍스트 무시
     text = re.sub(r'\|\|[\s\S]*?\|\|', '', text)
+
+    text = html.escape(text) # &, <, > 기호 안전하게 변환
+
+    # **텍스트**을 찾아 SSML 강조 태그로 변환
+    text = re.sub(r'\*\*(.*?)\*\*', r'<emphasis level="strong">\1</emphasis>', text)
+
+    # 나머지 마크다운 기호 삭제
+    text = re.sub(r'~~(.*?)~~', r'\1', text)
+    text = re.sub(r'\*(.*?)\*', r'\1', text)
+    text = re.sub(r'__(.*?)__', r'\1', text)
+    text = re.sub(r'`(.*?)`', r'\1', text)
+
     # 디스코드 커스텀 이모지 임시 태그로 변경
     text = re.sub(r'<a?:\w+:\d+>', "[EMOJI]", text)
     # 기본 유니코드 이모티콘 임시 태그로 변경
@@ -104,12 +124,11 @@ async def replace_text(text):
     if text == "이모티콘":
         text = "이모티콘을 보냈어요."
 
-    if len(text) > MAX_LENGTH:
-        text = "너무 긴 글은 읽을 수 없어요."
-
     return text
 
 def apply_nyaize(text: str) -> str:
+    text = unicodedata.normalize('NFC', text)
+
     kr_pattern = re.compile(r'[나-낳]')
     text = kr_pattern.sub(lambda x: chr(ord(x.group()) + 56), text)
 
