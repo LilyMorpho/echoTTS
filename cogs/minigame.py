@@ -101,6 +101,46 @@ class Minigame(commands.Cog):
                 except discord.Forbidden:
                     pass
 
+    async def force_end_all_games(self):
+        for guild_id, game_data in list(self.forbidden_word_games.items()):
+            channel = self.bot.get_channel(game_data["channel_id"])
+            guild = self.bot.get_guild(guild_id)
+
+            if channel:
+                losers = game_data["losers"]
+                if not losers:
+                    result_text = "봇 업데이트로 인해 게임이 조기 종료되었습니다.\n🎉 아무도 금칙어를 말하지 않았습니다!"
+                else:
+                    losers_ranking = sorted(losers.items(), key=lambda user: user[1], reverse=True)
+                    result_text = "봇 업데이트로 인해 게임이 조기 종료되었습니다.\n💥 **[금칙어 게임 중간 결과]** 💥\n\n"
+
+                    for user_id, count in losers_ranking:
+                        member = guild.get_member(user_id)
+                        if not member:
+                            try:
+                                member = await guild.fetch_member(user_id)
+                            except discord.NotFound:
+                                member = None
+                        name = member.display_name if member else "알 수 없는 사용자"
+                        result_text += f"**{name}**: {count}회\n"
+
+                    max_count = losers_ranking[0][1]
+                    worst_users = [user_id for user_id, count in losers_ranking if count == max_count]
+                    mentions = ", ".join(f"<@{user_id}>" for user_id in worst_users)
+                    result_text += f"\n🏆 **현재까지의 패배자** {mentions} 님!\n"
+
+                embed = discord.Embed(
+                    title="🛑 금칙어 게임 긴급 종료!",
+                    description=f"에코봇이 재시작되어 게임이 강제로 종료되었습니다.\n(금칙어: **{game_data['word']}**)\n\n{result_text}",
+                    color=discord.Color.red()
+                )
+                try:
+                    await channel.send(embed=embed)
+                except discord.Exception:
+                    pass
+
+        self.forbidden_word_games.clear()
+
     @app_commands.command(name="주사위", description="m면체 주사위를 n개 굴립니다. (예: 2d6)")
     @app_commands.describe(
         expression="주사위 형식 (예: '2d6'을 입력받으면 6면체 주사위 2개를 굴립니다. 퍼지 다이스는 3dF와 같이 입력받습니다.(퍼지 다이스 3개)",

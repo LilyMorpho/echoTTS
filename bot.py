@@ -25,6 +25,32 @@ class TTSBot(commands.Bot):
         # 슬래시 커맨드 디스코드 서버와 동기화
         await self.tree.sync()
 
+    async def close(self):
+        print("봇 재시작/종료 중...\n 안전 종료 시퀀스 시작!")
+
+        minigame_cog = self.get_cog("Minigame")
+        if minigame_cog:
+            try:
+                await minigame_cog.force_end_all_games()
+                print("진행 중인 미니게임 결과 발표 완료")
+            except Exception as e:
+                print(f"미니게임 조기 종료 중 에러 발생: {e}")
+
+        for vc in self.voice_clients:
+            voice_channel = vc.channel
+            try:
+                await voice_channel.send(f"👋 **{self.user.name}**이(가) 업데이트를 위해 잠시 채팅방을 떠날거예요. 금방 돌아올게요!")
+
+                await vc.disconnect(force=True)
+                print(f"✅ [{voice_channel.guild.name}] 음성 채널 및 내부 채팅방 퇴장 완료")
+                except discord.Forbidden:
+                print(f"⚠️ 해당 채널에 메시지를 보낼 권한이 없습니다.")
+            except Exception as e:
+                print(f"⚠️ 메시지 전송 중 에러: {e}")
+
+        print("에코봇을 완전히 종료합니다.")
+        await super().close()
+
 bot = TTSBot()
 
 @bot.event
