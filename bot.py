@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands
 
 import os
+import asyncio
+import signal
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -25,7 +27,12 @@ class TTSBot(commands.Bot):
         # 슬래시 커맨드 디스코드 서버와 동기화
         await self.tree.sync()
 
-    async def close(self):
+        try:
+            self.loop.add_signal_handler(signal.SIGINT, lambda: self.loop.create_task(self.stop_bot()))
+        except NotImplementedError:
+            pass
+
+    async def stop_bot(self):
         print("봇 재시작/종료 중...\n 안전 종료 시퀀스 시작!")
 
         minigame_cog = self.get_cog("Minigame")
@@ -49,10 +56,9 @@ class TTSBot(commands.Bot):
                 print(f"⚠️ 메시지 전송 중 에러: {e}")
 
         print("에코봇을 완전히 종료합니다.")
-        import asyncio
         await asyncio.sleep(3)
 
-        await super().close()
+        await self.close()
 
 bot = TTSBot()
 
