@@ -98,7 +98,7 @@ async def replace_text(text):
     # 나머지 마크다운 기호 삭제
     text = re.sub(r'~~(.*?)~~', r'\1', text)
     text = re.sub(r'\*(.*?)\*', r'\1', text)
-    text = re.sub(r'__(.*?)__', r'\1', text)
+    text = re.sub(r'_(.*?)_', r'\1', text)
     text = re.sub(r'`(.*?)`', r'\1', text)
 
     # 디스코드 커스텀 이모지 임시 태그로 변경
