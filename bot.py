@@ -28,7 +28,7 @@ class TTSBot(commands.Bot):
         await self.tree.sync()
 
         try:
-            self.loop.add_signal_handler(signal.SIGINT, lambda: self.loop.create_task(self.stop_bot()))
+            self.loop.add_signal_handler(signal.SIGTERM, lambda: self.loop.create_task(self.stop_bot()))
         except NotImplementedError:
             pass
 
