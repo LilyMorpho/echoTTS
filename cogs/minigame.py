@@ -59,7 +59,7 @@ class Minigame(commands.Cog):
                         member = guild.get_member(user_id)
                         if not member:
                             try:
-                                member = guild.fetch_member(user_id)
+                                member = await guild.fetch_member(user_id)
                             except discord.NotFound:
                                 member = None
                         name = member.display_name if member else "알 수 없는 사용자"
@@ -103,54 +103,76 @@ class Minigame(commands.Cog):
 
     @app_commands.command(name="주사위", description="m면체 주사위를 n개 굴립니다. (예: 2d6)")
     @app_commands.describe(
-        expression="주사위 형식 (예: '2d6'을 입력받으면 6면체 주사위 2개를 굴립니다.",
-        explode_threshold="[선택] 이 수치 이상이 나오면 주사위를 다시 굴려 더합니다."
+        expression="주사위 형식 (예: '2d6'을 입력받으면 6면체 주사위 2개를 굴립니다. 퍼지 다이스는 3dF와 같이 입력받습니다.(퍼지 다이스 3개)",
+        explode_threshold="[선택] 이 수치 이상이 나오면 주사위를 다시 굴려 더합니다. (퍼지 다이스 제외)"
     )
     async def roll_dice(self, interaction: discord.Interaction, expression: str, explode_threshold: int = None):
         expression = expression.lower().strip()
-        match = re.match(r"^(\d+)d(\d+)$", expression)
+        match = re.match(r"^(\d+)d(\d+|f)$", expression)
 
         if not match:
-            await interaction.response.send_message("❌ 올바른 형식이 아닙니다! `숫자d숫자` 형식으로 입력해 주세요. (예: 2d6, 1d100)", ephemeral=True)
+            await interaction.response.send_message("❌ 올바른 형식이 아닙니다! `숫자d숫자` 또는 '숫자dF' 형식으로 입력해 주세요. (예: 2d6, 3dF)", ephemeral=True)
             return
 
         n = int(match.group(1))
-        m = int(match.group(2))
+        dice_type = match.group(2)
 
         if n < 1 or n > 100:
             await interaction.response.send_message("❌ 주사위 개수는 1개에서 100개 사이로 입력해 주세요.", ephemeral=True)
             return
 
-        if m < 2 or m > 1000:
-            await interaction.response.send_message("❌ 주사위 면수는 2에서 1000 사이로 입력해 주세요.", ephemeral=True)
-            return
-
-        if explode_threshold is not None:
-            if explode_threshold < 2 or explode_threshold > m:
-                await interaction.response.send_message(f"❌ 추가 굴림 수치는 1보다 크고 {m}(주사위 최댓값) 이하여야 합니다.", ephemeral=True)
-                return
-
         total = 0
         results_str_list = []
 
-        for _ in range(n):
-            roll = random.randint(1, m)
-            total += roll
+        if dice_type == "f":
+            if explode_threshold is not None:
+                await interaction.response.send_message("❌ 퍼지 다이스(dF)는 크리티컬 값을 지정할 수 없습니다.", ephemeral=True)
+                return
 
-            if explode_threshold is not None and roll >= explode_threshold:
-                chain = [str(roll)]
-                current_roll = roll
-                explosion_count = 0
+            for _ in range(n):
+                roll = random.randint(-1, 1)
+                total += roll
+                if roll == 1:
+                    results_str_list.append("+")
+                elif roll == -1:
+                    results_str_list.append("-")
+                else:
+                    results_str_list.append("0")
 
-                while current_roll >= explode_threshold:
-                    current_roll = random.randint(1, m)
-                    chain.append(str(current_roll))
-                    total += current_roll
-                    explosion_count += 1
+            expression_display = f"{n}dF"
 
-                results_str_list.append("(" + " + ".join(chain) + ")")
-            else:
-                results_str_list.append(str(roll))
+        else:
+            m = int(dice_type)
+
+            if m < 2 or m > 100:
+                await interaction.response.send_message("❌ 주사위 면수는 2에서 100 사이로 입력해 주세요.", ephemeral=True)
+                return
+
+            if explode_threshold is not None:
+                if explode_threshold <= 1 or explode_threshold > m:
+                    await interaction.response.send_message(f"❌ 추가 굴림 수치는 1보다 크고 {m}(주사위 최댓값) 이하여야 합니다.", ephemeral=True)
+                    return
+
+            for _ in range(n):
+                roll = random.randint(1, m)
+                total += roll
+
+                if explode_threshold is not None and roll >= explode_threshold:
+                    chain = [str(roll)]
+                    current_roll = roll
+                    explosion_count = 0
+
+                    while current_roll >= explode_threshold:
+                        current_roll = random.randint(1, m)
+                        chain.append(str(current_roll))
+                        total += current_roll
+                        explosion_count += 1
+
+                    results_str_list.append("(" + " + ".join(chain) + ")")
+                else:
+                    results_str_list.append(str(roll))
+
+            expression_display = f"{n}d{m}"
 
         results_str = ", ".join(results_str_list)
 
@@ -160,7 +182,7 @@ class Minigame(commands.Cog):
         title_suffix = f" 💥(크리티컬: {explode_threshold} 이상)" if explode_threshold else ""
 
         embed = discord.Embed(
-            title=f"🎲 {expression} 주사위 굴림 결과{title_suffix}",
+            title=f"🎲 {expression_display} 주사위 굴림 결과{title_suffix}",
             description=f"**총합: {total}**\n\n```\n[ {results_str} ]\n```",
             color=discord.Color.green() if not explode_threshold else discord.Color.orange()
         )
