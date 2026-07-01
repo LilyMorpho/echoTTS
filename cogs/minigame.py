@@ -136,7 +136,7 @@ class Minigame(commands.Cog):
                 )
                 try:
                     await channel.send(embed=embed)
-                except discord.Exception:
+                except discord.DiscordException:
                     pass
 
         self.forbidden_word_games.clear()

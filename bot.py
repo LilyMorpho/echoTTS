@@ -49,6 +49,9 @@ class TTSBot(commands.Bot):
                 print(f"⚠️ 메시지 전송 중 에러: {e}")
 
         print("에코봇을 완전히 종료합니다.")
+        import asyncio
+        await asyncio.sleep(3)
+
         await super().close()
 
 bot = TTSBot()
