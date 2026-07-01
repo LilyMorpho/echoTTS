@@ -90,17 +90,6 @@ async def replace_text(text):
     # 스포일러 태그 안의 텍스트 무시
     text = re.sub(r'\|\|[\s\S]*?\|\|', '', text)
 
-    text = html.escape(text) # &, <, > 기호 안전하게 변환
-
-    # **텍스트**을 찾아 SSML 강조 태그로 변환
-    text = re.sub(r'\*\*(.*?)\*\*', r'<emphasis level="strong">\1</emphasis>', text)
-
-    # 나머지 마크다운 기호 삭제
-    text = re.sub(r'~~(.*?)~~', r'\1', text)
-    text = re.sub(r'\*(.*?)\*', r'\1', text)
-    text = re.sub(r'_(.*?)_', r'\1', text)
-    text = re.sub(r'`(.*?)`', r'\1', text)
-
     # 디스코드 커스텀 이모지 임시 태그로 변경
     text = re.sub(r'<a?:\w+:\d+>', "[EMOJI]", text)
     # 기본 유니코드 이모티콘 임시 태그로 변경
@@ -113,6 +102,18 @@ async def replace_text(text):
         for url in urls:
             title = await get_link_title(url)
             text = text.replace(url, f"링크 {title}")
+
+    text = html.escape(text) # &, <, > 기호 안전하게 변환
+
+    # **텍스트**을 찾아 SSML 강조 태그로 변환
+    text = re.sub(r'\*\*(.*?)\*\*', r'<emphasis level="strong">\1</emphasis>', text)
+
+    # 나머지 마크다운 기호 삭제
+    text = re.sub(r'~~(.*?)~~', r'\1', text)
+    text = re.sub(r'\*(.*?)\*', r'\1', text)
+    text = re.sub(r'_(.*?)_', r'\1', text)
+    text = re.sub(r'`(.*?)`', r'\1', text)
+
     # 반복문자 줄이기
     text = re.sub(r'([ㅋㅎㅜㅠ.,?!])\1{4,}', r'\1\1\1\1\1', text)
     # 줄임말 풀어서 읽기
