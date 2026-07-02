@@ -53,7 +53,7 @@ class TTSCore(commands.Cog):
             self.is_processing[guild.id] = True
 
             # 백그라운드에서 돌아가는 작업을 순서대로 꺼냄
-            gen_task = self.tts_queues[guild.id].pop(0)
+            gen_task, message = self.tts_queues[guild.id].pop(0)
 
             try:
                 voice_buffer = await gen_task
@@ -77,6 +77,12 @@ class TTSCore(commands.Cog):
             except Exception as e:
                 print(f"TTS 에러: {e}")
                 self.is_processing[guild.id] = False
+                # 에러가 발생한 원본 메시지에 이모지로 반응
+                try:
+                    await message.add_reaction("⚠️")
+                except Exception:
+                    pass
+
                 # 에러가 나더라도 다른 채팅을 읽을 수 있도록 조치
                 asyncio.run_coroutine_threadsafe(self.process_and_play(guild), self.bot.loop)
         else:
@@ -188,7 +194,7 @@ class TTSCore(commands.Cog):
 
             # 텍스트를 직접 대기열에 넣지 않고, 파일을 생성하는 백그라운드 작업을 즉시 실행 후 작업을 대기열에 넣음.
             gen_task = asyncio.create_task(self.prepare_tts(raw_text.strip(), message.author.id))
-            self.tts_queues[message.guild.id].append(gen_task)
+            self.tts_queues[message.guild.id].append((gen_task, message))
 
             # tts 음성 처리 함수 호출 (이미 재생 중이면 알아서 무시하고 큐에만 담김)
             await self.process_and_play(message.guild)
