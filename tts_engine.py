@@ -27,7 +27,7 @@ def generate_tts_voice(text, setting):
             response = tts_client.synthesize_speech(request=request)
             return io.BytesIO(response.audio_content)
 
-        except GoogleAPIError:
+        except GoogleAPIError as e:
             if attempt < max_retries - 1:
                 print(f"⚠️ 구글 TTS 서버 지연. 재시도 중... ({attempt + 1}/{max_retries})", flush=True)
                 time.sleep(0.5)  # 1.5초 대기 후 다시 요청
