@@ -17,21 +17,6 @@ class TTSCore(commands.Cog):
         self.tts_queues = {}
         self.is_processing = {}
 
-    async def cog_load(self):
-        self.keep_alive_tts.start()
-
-    async def cog_unload(self):
-        self.keep_alive_tts.cancel()
-
-    @tasks.loop(minutes=5)
-    async def keep_alive_tts(self):
-        try:
-            # "아" 한 글자만 요청하고 결과(버퍼)는 버립니다.
-            dummy_setting = {"voice": "ko-KR-Wavenet-A", "pitch": 0.0, "rate": 1.0}
-            await asyncio.to_thread(generate_tts_voice, "아", dummy_setting)
-        except Exception:
-            pass
-
     async def prepare_tts(self, text, user_id):
         # 메시지 처리
         processed_content = await replace_text(text)
