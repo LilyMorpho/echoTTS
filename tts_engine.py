@@ -9,7 +9,7 @@ def generate_tts_voice(text, setting):
     is_chirp3 = "Chirp3" in str(setting["voice"])
     safe_pitch = 0.0 if is_chirp3 else float(setting["pitch"])
 
-    ssml_content = f"<speak>{str(text)}</speak>"
+    ssml_content = f"<speak><break time='100ms'/>{str(text)}<break time='300ms'/></speak>"
 
     request = texttospeech.SynthesizeSpeechRequest({
         "input": {"ssml": ssml_content},
