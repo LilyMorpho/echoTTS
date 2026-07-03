@@ -86,7 +86,14 @@ async def get_link_title(url):
     return ""
 
 async def replace_text(text):
-    # 글자수 제한을 텍스트 처리 이전에 넣기
+    # 링크 감지
+    urls = re.findall(r'https?://\S+', text)
+    if urls:
+        for url in urls:
+            title = await get_link_title(url)
+            text = text.replace(url, f"링크 {title}")
+
+    # 글자수 제한을 텍스트 처리 이전에 넣기(링크 메타데이터 불러온 이후)
     if len(text) > MAX_LENGTH:
         text = "너무 긴 글은 읽을 수 없어요."
 
@@ -99,12 +106,6 @@ async def replace_text(text):
     text = emoji.replace_emoji(text, replace="[EMOJI]")
     # 연속된 임시 태그(중간에 공백이 있어도 포함)을 하나로 묶어서 "이모티콘"으로 치환
     text = re.sub(r'(?:\[EMOJI\]\s*)+', ' 이모티콘 ', text)
-    # 링크 감지
-    urls = re.findall(r'https?://\S+', text)
-    if urls:
-        for url in urls:
-            title = await get_link_title(url)
-            text = text.replace(url, f"링크 {title}")
 
     text = html.escape(text) # &, <, > 기호 안전하게 변환
 
