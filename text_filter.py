@@ -93,12 +93,12 @@ async def replace_text(text):
             title = await get_link_title(url)
             text = text.replace(url, f"링크 {title}")
 
+    # 스포일러 태그 안의 텍스트 무시
+    text = re.sub(r'\|\|[\s\S]*?\|\|', '', text)
+
     # 글자수 제한을 텍스트 처리 이전에 넣기(링크 메타데이터 불러온 이후)
     if len(text) > MAX_LENGTH:
         text = "너무 긴 글은 읽을 수 없어요."
-
-    # 스포일러 태그 안의 텍스트 무시
-    text = re.sub(r'\|\|[\s\S]*?\|\|', '', text)
 
     # 디스코드 커스텀 이모지 임시 태그로 변경
     text = re.sub(r'<a?:\w+:\d+>', "[EMOJI]", text)
