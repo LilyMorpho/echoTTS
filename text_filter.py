@@ -77,7 +77,7 @@ async def get_link_title(url):
 
                 if soup.title and soup.title.string:
                     title = soup.title.string.strip()
-                    if len(title) > 40:
+                    if len(title) > 50:
                         title = f"{title[:40]}... 이하 생략."
                     return title
     except Exception:
