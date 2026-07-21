@@ -181,6 +181,9 @@ class TTSCore(commands.Cog):
                     if hasattr(message, "message_snapshots") and message.message_snapshots:
                         original_message = message.message_snapshots[0].content
 
+                        if len(original_message) > 50:
+                            original_message = f"{original_message[:40]}... 이하 생략."
+
                         raw_text = attachment_text + "\n전달된 메시지 : " + original_message
             else:
                 raw_text = attachment_text + message.clean_content
