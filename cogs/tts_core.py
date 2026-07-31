@@ -17,6 +17,29 @@ class TTSCore(commands.Cog):
         self.tts_queues = {}
         self.is_processing = {}
 
+    async def cog_load(self):
+        self.udp_keep_alive.start()
+
+    async def cog_unload(self):
+        self.udp_keep_alive.cancel()
+
+    @tasks.loop(minutes=3)
+    async def udp_keep_alive(self):
+        for vc in self.bot.voice_clients:
+            # 봇이 음성 채널에 연결되어 있고, 현재 아무 소리도 재생하지 않을 때만 실행
+            if vc.is_connected() and not vc.is_playing():
+                guild_id = vc.guild.id
+
+                # TTS 처리가 진행 중이 아닐 때만(락이 안 걸려 있을 때만) 무음 재생
+                if not self.is_processing.get(guild_id, False):
+                    try:
+                        # 0.1초짜리 아주 짧은 무음을 재생하여 소켓 유지
+                        silence = discord.FFmpegPCMAudio(source='anullsrc=r=48000:cl=mono',
+                                                         before_options='-f lavfi -t 0.1')
+                        vc.play(silence)
+                    except Exception as e:
+                        print(f"[{vc.guild.name}] Keep-Alive 무음 전송 실패: {e}")
+
     async def prepare_tts(self, text, user_id):
         # 메시지 처리
         processed_content = await replace_text(text)
